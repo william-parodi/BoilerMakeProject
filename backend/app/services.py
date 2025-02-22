@@ -34,8 +34,10 @@ async def call_openai(input_text: str) -> dict:
         try:
             parsed_response = json.loads(response_text)
         except json.JSONDecodeError as e:
-            logger.error("Error decoding JSON response: %s", e)
-            raise ValueError("Failed to decode JSON from OpenAI response.")
+            error_msg = f"Error decoding JSON response: {str(e)}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
 
         return parsed_response
 
