@@ -10,7 +10,7 @@ async def call_openai(input_text: str) -> dict:
         "You are a pizza order processing assistant. Your job is to validate and sanitize a natural language string "
         "describing a pizza order. Extract the details into a JSON object with a 'pizzas' key (a list of pizza orders) "
         "and an 'additional_info' field for any extra information. Each pizza order should include a positive integer 'quantity', "
-        "'size' (small, medium, large), and 'crust' (thin, thick, stuffed). Discard any invalid orders. "
+        "'size' (small, medium, large), and 'crust' (hand tossed, crunchy thin crust, new york style). Discard any invalid orders. "
         "Return only a valid JSON object with the keys 'pizzas' and 'additional_info'."
     )
     user_prompt = f"Input: {input_text}"

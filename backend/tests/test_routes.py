@@ -13,17 +13,16 @@ def client_instance():
 @pytest.fixture
 def mock_openai():
     with patch.object(client.chat.completions, "create", new_callable=AsyncMock) as mock_api:
-        # Create a mock response object
         mock_response = MagicMock()
         mock_response.choices = [
-            MagicMock(message=MagicMock(content='{"pizzas": [{"quantity": 2, "size": "medium", "crust": "thin"}], "additional_info": "Extra info processed."}'))
+            MagicMock(message=MagicMock(content='{"pizzas": [{"quantity": 2, "size": "medium", "crust": "hand tossed"}], "additional_info": "Extra info processed."}'))
         ]
         mock_api.return_value = mock_response
         yield mock_api
 
 def test_process_chat_valid(client_instance, mock_openai):
     request_data = {
-        "user_input": "I would like 2 medium pizzas with thin crust."
+        "user_input": "I would like 2 medium pizzas with hand tossed crust."
     }
     response = client_instance.post("/chat", json=request_data)
     

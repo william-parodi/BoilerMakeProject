@@ -8,9 +8,9 @@ class SizeEnum(str, Enum):
     large = "large"
 
 class CrustEnum(str, Enum):
-    thin = "thin"
-    thick = "thick"
-    stuffed = "stuffed"
+    hand_tossed = "hand tossed"
+    crunchy_thin_crust = "crunchy thin crust"
+    new_york_style = "new york style"
 
 class Pizza(BaseModel):
     quantity: PositiveInt

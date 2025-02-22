@@ -20,7 +20,7 @@ client = TestClient(app)
     reason="Real OpenAI API key not provided; skipping integration tests."
 )
 def test_process_chat_real_api():
-    request_data = {"user_input": "I would like 2 large pizzas with thick crust."}
+    request_data = {"user_input": "I would like 2 large pizzas with hand tossed crust."}
     response = client.post("/chat", json=request_data)
     
     print("\n ChatGPT Response:", response.text)
