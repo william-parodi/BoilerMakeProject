@@ -1,15 +1,16 @@
 from fastapi import APIRouter, HTTPException
-from app.models import PizzaRequest, PizzaResponse
+from app.models import ChatInput, PizzaResponse
 from app.services import call_openai
 from app.logger import logger
 
 router = APIRouter()
 
-@router.post("/pizzas", response_model=PizzaResponse)
-async def process_pizzas(pizza_request: PizzaRequest):
+@router.post("/chat", response_model=PizzaResponse)
+async def process_chat(chat_input: ChatInput):
     try:
-        pizza_request_json = pizza_request.model_dump_json()
-        parsed_response = await call_openai(pizza_request_json)
+        # Extract the plain text input from the user.
+        user_input = chat_input.user_input
+        parsed_response = await call_openai(user_input)
         try:
             response = PizzaResponse(**parsed_response)
             return response
@@ -20,5 +21,5 @@ async def process_pizzas(pizza_request: PizzaRequest):
                 detail=f"Parsed data did not match expected schema: {validation_error}"
             )
     except Exception as e:
-        logger.exception("Unhandled exception in process_pizzas")
+        logger.exception("Unhandled exception in process_chat")
         raise HTTPException(status_code=500, detail=str(e))

@@ -17,8 +17,8 @@ class Pizza(BaseModel):
     size: SizeEnum
     crust: CrustEnum
 
-class PizzaRequest(BaseModel):
-    pizzas: List[Pizza]
+class ChatInput(BaseModel):
+    user_input: str
 
 class PizzaResponse(BaseModel):
     pizzas: List[Pizza]

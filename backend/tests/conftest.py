@@ -2,6 +2,9 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
 from app.main import app
+from dotenv import load_dotenv
+
+load_dotenv()
 
 client = TestClient(app)
 
