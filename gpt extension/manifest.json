@@ -1,0 +1,32 @@
+{
+    "manifest_version": 3,
+    "name": "PizzaGPT",
+    "version": "1.0",
+    "description": "Pizza GPT",
+    "permissions": [
+      "tabs"
+    ],
+
+    "action": {
+      "default_popup": "popup.html"
+    },
+
+    "host_permissions": [
+      "*://*/*"
+    ],
+
+    "background": {
+      "service_worker": "background.js",
+      "type": "module"
+    },
+
+    "content_scripts": [
+        {
+          "matches": [
+            "*://*.dominos.com/*"
+          ],
+          "js": ["content.js"]
+        }
+      ]
+
+}
