@@ -14,8 +14,9 @@ async def call_openai(input_text: str) -> dict:
         "Return only a valid JSON object with the keys 'pizzas' and 'additional_info'."
     )
     user_prompt = f"Input: {input_text}"
-    
+
     try:
+        # Make the API call to OpenAI
         completion = await client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -25,9 +26,19 @@ async def call_openai(input_text: str) -> dict:
         )
 
         response_text = completion.choices[0].message.content
-        parsed_response = json.loads(response_text)
+
+        if not response_text:
+            logger.error("Received an empty response from OpenAI API.")
+            raise ValueError("Empty response from OpenAI API.")
+
+        try:
+            parsed_response = json.loads(response_text)
+        except json.JSONDecodeError as e:
+            logger.error("Error decoding JSON response: %s", e)
+            raise ValueError("Failed to decode JSON from OpenAI response.")
+
         return parsed_response
-    
+
     except Exception as e:
         logger.error("Error calling OpenAI API: %s", e)
         raise

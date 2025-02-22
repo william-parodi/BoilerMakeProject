@@ -1,7 +1,17 @@
 import os
 import pytest
+import logging
 from fastapi.testclient import TestClient
 from app.main import app
+
+# Setup logger
+logger = logging.getLogger("pizza_app")
+logger.setLevel(logging.DEBUG)  # Log at DEBUG level
+
+handler = logging.StreamHandler()
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 client = TestClient(app)
 
@@ -12,6 +22,10 @@ client = TestClient(app)
 def test_process_chat_real_api():
     request_data = {"user_input": "I would like 2 large pizzas with thick crust."}
     response = client.post("/chat", json=request_data)
+    
+    print("\n ChatGPT Response:", response.text)
+    logger.info(f"ChatGPT Response: {response.text}")
+
     assert response.status_code == 200
     data = response.json()
     assert "pizzas" in data
