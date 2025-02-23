@@ -3,14 +3,22 @@ from typing import List, Optional
 from pydantic import BaseModel, PositiveInt
 
 class SizeEnum(str, Enum):
-    small = "small"
-    medium = "medium"
-    large = "large"
+    small = "Small"
+    medium = "Medium"
+    large = "Large"
 
 class CrustEnum(str, Enum):
-    hand_tossed = "hand tossed"
-    crunchy_thin_crust = "crunchy thin crust"
-    new_york_style = "new york style"
+    hand_tossed = "HAND TOSSED"
+    crunchy_thin_crust = "CRUNCHY THIN CRUST"
+    new_york_style = "NEW YORK STYLE"
+
+class MeatEnum(str, Enum):
+    pepperoni = "Pepperoni"
+    beef = "Beef"
+    italian_sausage = "Italian Sausage"
+    ham = "Ham"
+    philly_steak = "Philly Steak"
+    bacon = "Bacon"
 
 class Pizza(BaseModel):
     quantity: PositiveInt

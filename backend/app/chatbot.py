@@ -39,7 +39,6 @@ def core_memory_save(section: str, memory: str):
 
     key = "human_facts" if section == "human" else "agent_facts"
 
-    # Split into multiple facts if necessary
     facts = re.split(r", and |\. |\n|, ", memory)
     for fact in facts:
         fact = fact.strip()
@@ -74,19 +73,14 @@ core_memory_save_metadata = {
 }
 
 def chatbot_agent(user_message):
-    """
-    1. Load memory.
-    2. Send system instructions + memory + user message to LLM.
-    3. If the LLM calls the memory tool, handle it, then ask the LLM to produce a final answer.
-    4. Return the final assistant message and update `convo_ended` if the order is finalized.
-    """
+    """Handles conversation, memory, and detects final orders."""
     memory_data = load_memory()
-    convo_ended = False  # Initialize conversation state
+    convo_ended = False  # Default: conversation ongoing
 
     system_prompt = (
-        "You are a chatbot with memory. You provide information about different topics to the user, and to be inquisitive. "
-        "Specifically, you are designed to assist a user in ordering pizza. You hear their order, ask for clarifications, and finalize the order. "
-        "A final order must include: 'size', 'crust', and 'quantity'. "
+        "You are a chatbot with memory. You provide information about different topics to the user."
+        "Specifically, you are designed to assist a user in ordering pizza."
+        "A final order must include: 'size', 'crust', 'quantity', and 'meat'. "
         "You must provide a human-readable response to the user, as if it is a normal conversation. "
         "If they don't specify any of those parameters, you must ask them for it. "
         "Whenever the user provides new info, you MUST call the 'core_memory_save' function. "
@@ -97,8 +91,8 @@ def chatbot_agent(user_message):
         "\nImportant: If multiple facts are provided, store them all."   
     )
 
-    memory_json = json.dumps(memory_data, indent=2)
 
+    memory_json = json.dumps(memory_data, indent=2)
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "system", "content": "[MEMORY]\n" + memory_json},
@@ -113,31 +107,22 @@ def chatbot_agent(user_message):
 
     choice = response.choices[0].message
 
-    # Detect function calls and update memory
     if hasattr(choice, "tool_calls") and choice.tool_calls:
         for tool_call in choice.tool_calls:
             if tool_call.function.name == "core_memory_save":
                 args = json.loads(tool_call.function.arguments)
                 result_text = core_memory_save(**args)
-                tool_response_message = {
-                    "role": "function",
-                    "name": tool_call.function.name,
-                    "content": result_text
-                }
-                messages.append(tool_response_message)
+                messages.append({"role": "function", "name": tool_call.function.name, "content": result_text})
 
-        # Ask for the final assistant response after memory update
         final_response = client.chat.completions.create(
             model="gpt-4o",
             messages=messages
         )
         final_text = final_response.choices[0].message.content
-
     else:
         final_text = choice.content
 
-    # **Check if the conversation has ended**
     if "Finalized Order" in final_text:
-        convo_ended = True  # Mark conversation as ended
+        convo_ended = True  
 
     return final_text, convo_ended

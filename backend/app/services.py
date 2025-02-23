@@ -1,5 +1,5 @@
 from app.logger import logger
-from app.chatbot import chatbot_agent  # Importing your chatbot function
+from app.chatbot import chatbot_agent  
 import openai
 import os
 import json
@@ -9,33 +9,32 @@ api_key = os.getenv("API_KEY")
 client = openai.OpenAI(api_key=api_key)
 
 async def process_user_input(input_text: str) -> dict:
-    """
-    Calls your memory-enabled chatbot, then formats the response into structured JSON.
-    """
+    """Processes user input through the memory chatbot and formats final orders."""
     try:
-        # Step 1: Get conversational response from memory-enabled chatbot
-        chatbot_response, convo_ended = chatbot_agent(input_text)
+        response_text, convo_ended = chatbot_agent(input_text)
 
-        # Step 2: If the conversation is over, reformat it using a second GPT call
         if convo_ended:
             format_prompt = (
-                "You are an AI assistant that converts human-readable pizza orders into structured JSON. "
-                "Extract the order details from the following response and format them as a JSON object "
-                "with the following schema: "
-                "{ 'pizzas': [{'quantity': int, 'size': 'small' | 'medium' | 'large', 'crust': 'thin' | 'thick' | 'stuffed'}], "
-                "'additional_info': 'any extra comments from the user'}."
-                "If no valid order is present, return an empty 'pizzas' list."
-                "\n\nUser's message: " + chatbot_response
+                "You are an AI that converts human-readable pizza orders into JSON. "
+                "Extract all order details from the response below and structure them as a valid JSON object. "
+                "Strictly follow this format:\n\n"
+                "{ \"pizzas\": [{\"quantity\": int, \"size\": \"Small\" | \"Medium\" | \"Large\", \"crust\": \"HAND TOSSED\" | \"CRUNCHY THIN CRUST\" | \"NEW YORK STYLE\", \"meat\": \"Pepperoni\" | \"Beef\" | \"Italian Sausage\" | \"Ham\" | \"Philly Steak\" | \"Bacon\" }], "
+                "\"additional_info\": \"any extra comments\" }"
+                "\n\n### ORDER TEXT ###\n"
+                + response_text
+                + "\n\n### INSTRUCTIONS ###\n"
+                "Return ONLY valid JSON. Do NOT include any explanations, text, markdown, or any additional formatting."
             )
 
+
             messages = [{"role": "system", "content": format_prompt}]
-            response = client.chat.completions.create(
+            json_response = client.chat.completions.create(
                 model="gpt-4o",
                 messages=messages
             )
 
-            # Extract JSON response
-            formatted_text = response.choices[0].message.content
+            formatted_text = json_response.choices[0].message.content
+
             try:
                 structured_response = json.loads(formatted_text)
             except json.JSONDecodeError:
@@ -44,8 +43,7 @@ async def process_user_input(input_text: str) -> dict:
 
             return structured_response
 
-        # Step 3: If the conversation is not over, return GPT's natural language response
-        return {"response": chatbot_response}
+        return {"response": response_text}
 
     except Exception as e:
         logger.error("Error processing user input: %s", e)

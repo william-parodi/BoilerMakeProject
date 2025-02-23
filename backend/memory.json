@@ -1,9 +1,24 @@
 {
     "human_facts": [
-        "large pepperoni pizza",
+        "quantity: 2",
+        "size: large",
+        "crust: thin",
+        "quantity: 3",
+        "size: small",
+        "cheese pizzas",
         "thin crust",
-        "2 large cheese pizzas with a thin crust",
-        "order quantity: 2"
+        "two large cheese pizzas",
+        "three small cheese pizzas",
+        "meat: ham",
+        "meat: beef",
+        "two large new york style pizzas",
+        "three small pizzas",
+        "ham",
+        "two large pizzas",
+        "beef",
+        "with ham",
+        "crust: hand tossed",
+        "three large hand tossed pizzas with ham"
     ],
     "agent_facts": []
 }
