@@ -1,8 +1,6 @@
-console.log("Chrome extension is so on")
+user_location = {"Street": "214 PIERCE ST", "Zip": 47906, "City": "West Lafayette", "State": "IN"}
 
-user_location = {"Street": "214 PIERCE ST", "Apt_num": "311", "Zip": 47906, "City": "West Lafayette", "State": "IN"}
-
-WAIT_TIME = 300
+WAIT_TIME = 500
 
 // Asssuming that user location is already filled
 
@@ -34,14 +32,27 @@ small_pizza_button = '[data-quid="pizza-size-10-size"]';
 medium_pizza_button = '[data-quid="pizza-size-12-size"]';
 large_pizza_button = '[data-quid="pizza-size-14-size"]';
 
-handTossed_button = '[data-quid="crust-input-14SCREEN"]';
-crunchyThin_button = '[data-quid="crust-input-14THIN"]';
-newYorkStyle_button = '[data-quid="crust-input-PBKIREZA"]';
+// handTossed_button = '[data-quid="crust-input-14SCREEN"]';
+// crunchyThin_button = '[data-quid="crust-input-14THIN"]';
+// newYorkStyle_button = '[data-quid="crust-input-PBKIREZA"]';
+
+handTossed_button = '[data-quid^="crust-input"][data-quid$="SCREEN"]';
+crunchyThin_button = '[data-quid^="crust-input"][data-quid$="THIN"]';
+newYorkStyle_button = '[data-quid^="crust-input"][data-quid$="PBKIREZA"]';
 
 add_to_order_button = '.single-page-pizza-builder__add-to-order';
 
 popup_overlay_cheese = ".card--overlay";
 yes_cheese_button = '[data-quid="builder-yes-step-upsell"]'
+
+ham_buttonn = '[data-quid="topping-H"]'
+sausage_button = '[data-quid="topping-S"]'
+beef_button = '[data-quid="topping-B"]'
+bacon_button = '[data-quid="topping-K"]'
+pepperoni_button = '[data-quid="topping-P"]'
+philly_steak_button = '[data-quid="topping-P"]'
+
+checkout_button = '[data-quid="order-checkout-button"]'
 
 auto_click_element(menu_button);
 
@@ -86,21 +97,26 @@ function pizza_builder_menu_exists() {
     });
 }
 
+// Go directly on checkout menu
+
 const orders = [
     {
-        "quantity": 4,
-        "size": "medium",
-        "crust": "NEW YORK STYLE"
-    },
-    {
-        "quantity": 15,
-        "size": "small",
-        "crust": "HAND TOSSED"
-    },
-    {
-        "quantity": 3,
+        "quantity": 12,
         "size": "large",
-        "crust": "THIN CRUST"
+        "crust": "HAND TOSSED",
+        "meat": "ham"
+    },
+    {
+        "quantity": 7,
+        "size": "medium",
+        "crust": "THIN CRUST",
+        "meat": "beef"
+    },
+    {
+        "quantity": 2,
+        "size": "large",
+        "crust": "THIN CRUST",
+        "meat": "bacon"
     }
 ];
 
@@ -111,6 +127,9 @@ async function start_ordering() {
         await process_order(order);
         await new Promise(resolve => setTimeout(resolve, WAIT_TIME / 4));
     }
+
+    // Going to checkout page
+    auto_click_element(checkout_button);
 }
 
 // Processes individual order
@@ -166,6 +185,29 @@ async function make_pizza(order) {
     } else if (order.crust == "NEW YORK STYLE") {
         console.log("Selecting New York style crust");
         auto_click_element(newYorkStyle_button);
+    }
+
+    await new Promise(resolve => setTimeout(resolve, WAIT_TIME / 4));
+
+    // Handle different meats
+    if (order.meat == "ham") {
+        console.log("Selecting ham");
+        auto_click_element(ham_buttonn);
+    } else if (order.meat == "beef") {
+        console.log("Selecting beef");
+        auto_click_element(beef_button);
+    } else if (order.meat == "pepperoni") {
+        console.log("Selecting pepperoni");
+        auto_click_element(pepperoni_button);
+    } else if (order.meat == "Italian Sausage") {
+        console.log("Selecting Italian Sausage");
+        auto_click_element(sausage_button);
+    } else if (order.meat == "bacon") {
+        console.log("Selecting bacon");
+        auto_click_element(bacon_button);
+    } else if (order.meat == "Philly Steak") {
+        console.log("Selecting Philly Steak");
+        auto_click_element(philly_steak_button);
     }
 
     await new Promise(resolve => setTimeout(resolve, WAIT_TIME / 4));
