@@ -29,7 +29,7 @@ def test_process_chat_real_api():
     assert response.status_code == 200
     data = response.json()
 
-    # ✅ Extract the 'response' field before checking 'pizzas'
+    # ✅ Extract the 'response' field before checking 'pizzas'i
     assert "response" in data, "API response is missing the 'response' field"
     assert "pizzas" in data["response"], "API response is missing the 'pizzas' key inside 'response'"
     assert isinstance(data["response"]["pizzas"], list), "'pizzas' should be a list"
