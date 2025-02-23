@@ -1,4 +1,4 @@
-# BoilerMake Project
+# Pizza Buddy
 
 Welcome to the **Pizza Buddy** repository! This project was created as part of the BoilerMake hackathon. 
 
