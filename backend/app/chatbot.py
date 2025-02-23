@@ -7,10 +7,11 @@ import re
 # Load environment variables from .env file
 load_dotenv()
 
-api_key = os.getenv("OPENAI_API_KEY")
+api_key = os.getenv("API_KEY")
 client = openai.OpenAI(api_key=api_key)
 
 MEMORY_FILE = "memory.json"
+conversation_history = []  # Holds chat history per session
 
 def load_memory():
     """Load memory from disk (JSON). Fallback to default structure if not found."""
@@ -33,19 +34,11 @@ def save_memory(memory_data):
         json.dump(memory_data, f, indent=4)
 
 def core_memory_save(section: str, memory: str):
-    """
-    Update the memory with the new fact(s).
-    section: "human" or "agent"
-    memory: textual facts to store
-    """
+    """Update the memory with the new fact(s)."""
     memory_data = load_memory()
 
-    if section == "human":
-        key = "human_facts"
-    else:
-        key = "agent_facts"
+    key = "human_facts" if section == "human" else "agent_facts"
 
-    # Example: split on ", and", ". ", or ", " to capture multiple facts
     facts = re.split(r", and |\. |\n|, ", memory)
     for fact in facts:
         fact = fact.strip()
@@ -56,7 +49,6 @@ def core_memory_save(section: str, memory: str):
 
     return f"Memory updated. Current {section}_facts: {memory_data[key]}"
 
-# Define the function schema for the new OpenAI function-calling
 core_memory_save_metadata = {
     "type": "function",
     "function": {
@@ -80,22 +72,27 @@ core_memory_save_metadata = {
     }
 }
 
-async def chatbot_agent(user_message):
-    """
-    Ensure the response is a structured JSON with 'pizzas' and 'additional_info'.
-    """
+def chatbot_agent(user_message):
+    """Handles conversation, memory, and detects final orders."""
     memory_data = load_memory()
+    convo_ended = False  # Default: conversation ongoing
 
     system_prompt = (
-        "You are a pizza ordering assistant. Your job is to extract the details into a JSON object "
-        "with a 'pizzas' key (a list of pizza orders) and an 'additional_info' field for any extra information. "
-        "Each pizza order should include 'quantity' (a positive integer), 'size' (small, medium, large), and 'crust' (thin, thick, stuffed). "
-        "Discard any invalid orders. Do not return conversational responses. "
-        "Return ONLY valid JSON. Do NOT return any additional explanations or text, just the JSON object."
+        "You are a chatbot with memory. You provide information about different topics to the user."
+        "Specifically, you are designed to assist a user in ordering pizza."
+        "A final order must include: 'size', 'crust', 'quantity', and 'meat'. "
+        "You must provide a human-readable response to the user, as if it is a normal conversation. "
+        "If they don't specify any of those parameters, you must ask them for it. "
+        "Whenever the user provides new info, you MUST call the 'core_memory_save' function. "
+        "After you do so, provide your final answer to the user. "
+        "When the final order is confirmed, include the phrase 'Finalized Order' in your response. "
+        "This phrase indicates that the order is complete and the conversation has ended."
+        "\nIf no new info is provided, respond without calling the function."
+        "\nImportant: If multiple facts are provided, store them all."   
     )
 
-    memory_json = json.dumps(memory_data, indent=2)
 
+    memory_json = json.dumps(memory_data, indent=2)
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "system", "content": "[MEMORY]\n" + memory_json},
@@ -108,27 +105,24 @@ async def chatbot_agent(user_message):
         tools=[core_memory_save_metadata]
     )
 
-    if not hasattr(response, "choices") or not response.choices:
-        raise ValueError("Invalid response received from OpenAI API.")
+    choice = response.choices[0].message
 
-    raw_response = response.choices[0].message.content
+    if hasattr(choice, "tool_calls") and choice.tool_calls:
+        for tool_call in choice.tool_calls:
+            if tool_call.function.name == "core_memory_save":
+                args = json.loads(tool_call.function.arguments)
+                result_text = core_memory_save(**args)
+                messages.append({"role": "function", "name": tool_call.function.name, "content": result_text})
 
-    try:
-        parsed_response = json.loads(raw_response)  # Ensure it's valid JSON
-        if "pizzas" not in parsed_response:
-            raise ValueError("Missing 'pizzas' key in response.")
-        return parsed_response
-    except json.JSONDecodeError:
-        raise ValueError(f"Invalid JSON response: {raw_response}")
+        final_response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages
+        )
+        final_text = final_response.choices[0].message.content
+    else:
+        final_text = choice.content
 
+    if "Finalized Order" in final_text:
+        convo_ended = True  
 
-
-if __name__ == "__main__":
-    print("Type 'exit' or 'quit' to stop.")
-    while True:
-        user_input = input("You: ")
-        if user_input.lower() in ["exit", "quit"]:
-            print("Goodbye!")
-            break
-        response = chatbot_agent(user_input)
-        print("Bot:", response)
+    return final_text, convo_ended

@@ -1,6 +1,11 @@
-user_location = {"Street": "214 PIERCE ST", "Zip": 47906, "City": "West Lafayette", "State": "IN"}
-
 WAIT_TIME = 500
+
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    if (message.action === "sendOrders") {
+        console.log("Message received from popup, starting orders");
+        start_ordering(message.orders).then();
+    }
+});
 
 // Asssuming that user location is already filled
 
@@ -152,6 +157,12 @@ async function process_order(order) {
 // Add size + crust
 async function make_pizza(order) {
     // Handle quantity
+
+    console.log(order.quantity)
+    console.log(order.size)
+    console.log(order.crust)
+    console.log(order.meat)
+
     for (let i = 0; i < order.quantity - 1; i++) {
         auto_click_element(quantity_increment_button);
         await new Promise(resolve => setTimeout(resolve, WAIT_TIME / 4));
@@ -161,13 +172,13 @@ async function make_pizza(order) {
     await new Promise(resolve => setTimeout(resolve, WAIT_TIME / 4));
 
     // Handle different sizes
-    if (order.size == "small") {
+    if (order.size == "Small") {
         console.log("Selecting small size pizza");
         auto_click_element(small_pizza_button);
-    } else if (order.size == "medium") {
+    } else if (order.size == "Medium") {
         console.log("Selecting medium size pizza");
         auto_click_element(medium_pizza_button);
-    } else if (order.size == "large") {
+    } else if (order.size == "Large") {
         console.log("Selecting large size pizza");
         auto_click_element(large_pizza_button);
     }
@@ -190,22 +201,23 @@ async function make_pizza(order) {
     await new Promise(resolve => setTimeout(resolve, WAIT_TIME / 4));
 
     // Handle different meats
-    if (order.meat == "ham") {
+    const meat = order.meat.toLowerCase();
+    if (meat == "ham") {
         console.log("Selecting ham");
         auto_click_element(ham_buttonn);
-    } else if (order.meat == "beef") {
+    } else if (meat == "beef") {
         console.log("Selecting beef");
         auto_click_element(beef_button);
-    } else if (order.meat == "pepperoni") {
+    } else if (meat == "pepperoni") {
         console.log("Selecting pepperoni");
         auto_click_element(pepperoni_button);
-    } else if (order.meat == "Italian Sausage") {
+    } else if (meat == "italian sausage") {
         console.log("Selecting Italian Sausage");
         auto_click_element(sausage_button);
-    } else if (order.meat == "bacon") {
+    } else if (meat == "bacon") {
         console.log("Selecting bacon");
         auto_click_element(bacon_button);
-    } else if (order.meat == "Philly Steak") {
+    } else if (meat == "philly steak") {
         console.log("Selecting Philly Steak");
         auto_click_element(philly_steak_button);
     }
@@ -242,10 +254,10 @@ function make_start_order_button() {
     button.style.cursor = "pointer";
 
     button.addEventListener('click', async function() {
-      await start_ordering();
+      await start_ordering(orders);
     });
 
-    document.body.appendChild(button);
+    // document.body.appendChild(button);
 }
 
 make_start_order_button();
@@ -254,5 +266,3 @@ make_start_order_button();
 // auto_click_element('button'); // Clicks the first button element
 // auto_click_element('.submit-btn'); // Clicks element with class 'submit-btn'
 // auto_click_element('#submit'); // Clicks element with ID 'submit'
-
-const startTime = Date.now();

@@ -1,25 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Processing</title>
-    <style>
-        body {
-            background-color: white;
-            color: #29628D;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            height: 150px;
-            width: 400px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 30px;
-        }
-    </style>
+    <link href="./output.css" rel="stylesheet">
+    <title>Pizza Buddy</title>
 </head>
-<body>
-    <h1>Order is processing, you will be redirected to the checkout page soon</h1>
+<body class="bg-gray-100 w-[400px]">
+    <div class="max-w-md mx-auto h-screen flex items-center justify-center">
+        <!-- Chat Container - Fixed height -->
+        <div class="h-[600px] flex flex-col bg-white shadow-lg w-full">
+            <!-- Header - Fixed -->
+            <div class="bg-[#006989] text-white p-4">
+                <h1 class="text-3xl font-bold pt-4">Pizza Buddy</h1>
+            </div>
+            
+            <!-- Messages Container - Scrollable, fixed height -->
+            <div id="messages" class="flex-1 p-4 overflow-y-auto">
+                <!-- Messages will be inserted here -->
+            </div>
+            
+            <!-- Input Area - Fixed at bottom -->
+            <div class="border-t p-4 bg-white">
+                <div class="flex gap-2">
+                    <input type="text" id="userInput" 
+                           class="flex-1 border rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+                           placeholder="Type your message...">
+                    <button onclick="sendMessage()" 
+                            class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
 </body>
 </html>
