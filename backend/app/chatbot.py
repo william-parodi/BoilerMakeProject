@@ -7,7 +7,7 @@ import re
 # Load environment variables from .env file
 load_dotenv()
 
-api_key = os.getenv("API_KEY")
+api_key = os.getenv("OPENAI_API_KEY")
 client = openai.OpenAI(api_key=api_key)
 
 MEMORY_FILE = "memory.json"
@@ -80,22 +80,18 @@ core_memory_save_metadata = {
     }
 }
 
-def chatbot_agent(user_message):
+async def chatbot_agent(user_message):
     """
-    1. Load memory.
-    2. Send system instructions + memory + user message to LLM.
-    3. If the LLM calls the memory tool, handle it, then ask the LLM to produce a final answer.
-    4. Return the final assistant message.
+    Ensure the response is a structured JSON with 'pizzas' and 'additional_info'.
     """
     memory_data = load_memory()
 
     system_prompt = (
-        "You are a chatbot with memory. You provide information about different topics to the user, and to be inquisitve."
-        "If the user asks you to do something, ask all the clarifying questions necessary to fulfill the user's request."
-        "Whenever the user provides new info, you MUST call the 'core_memory_save' function. "
-        "After you do so, provide your final answer to the user."
-        "\nIf no new info is provided, respond without calling the function."
-        "\nImportant: If multiple facts are provided, store them all."
+        "You are a pizza ordering assistant. Your job is to extract the details into a JSON object "
+        "with a 'pizzas' key (a list of pizza orders) and an 'additional_info' field for any extra information. "
+        "Each pizza order should include 'quantity' (a positive integer), 'size' (small, medium, large), and 'crust' (thin, thick, stuffed). "
+        "Discard any invalid orders. Do not return conversational responses. "
+        "Return ONLY valid JSON. Do NOT return any additional explanations or text, just the JSON object."
     )
 
     memory_json = json.dumps(memory_data, indent=2)
@@ -106,40 +102,26 @@ def chatbot_agent(user_message):
         {"role": "user", "content": user_message}
     ]
 
-    # Make the first call to the API
     response = client.chat.completions.create(
-        model="gpt-4o",   # Or your model of choice
+        model="gpt-4o",
         messages=messages,
         tools=[core_memory_save_metadata]
     )
 
-    choice = response.choices[0].message
+    if not hasattr(response, "choices") or not response.choices:
+        raise ValueError("Invalid response received from OpenAI API.")
 
-    # Check if the LLM decided to call the function
-    if hasattr(choice, "tool_calls") and choice.tool_calls:
-        # If there's at least one function call:
-        for tool_call in choice.tool_calls:
-            if tool_call.function.name == "core_memory_save":
-                args = json.loads(tool_call.function.arguments)
-                result_text = core_memory_save(**args)
-                # Provide the tool result as a "function" role message
-                # so the LLM can see what happened
-                tool_response_message = {
-                    "role": "function",
-                    "name": tool_call.function.name,
-                    "content": result_text
-                }
-                messages.append(tool_response_message)
+    raw_response = response.choices[0].message.content
 
-        # After handling the function calls, we ask the model for its final answer
-        final_response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=messages
-        )
-        return final_response.choices[0].message.content
-    else:
-        # No function calls => the LLM just gave a direct user-facing response
-        return choice.content
+    try:
+        parsed_response = json.loads(raw_response)  # Ensure it's valid JSON
+        if "pizzas" not in parsed_response:
+            raise ValueError("Missing 'pizzas' key in response.")
+        return parsed_response
+    except json.JSONDecodeError:
+        raise ValueError(f"Invalid JSON response: {raw_response}")
+
+
 
 if __name__ == "__main__":
     print("Type 'exit' or 'quit' to stop.")

@@ -7,7 +7,7 @@ async def process_user_input(input_text: str) -> dict:
     """
     try:
         # Call your chatbot function
-        response_text = chatbot_agent(input_text)
+        response_text = await chatbot_agent(input_text)
 
         # Return a structured response
         return {"response": response_text}

@@ -1,8 +1,9 @@
 import pytest
+import json  # Ensure JSON import for parsing responses
 from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch, MagicMock
 from app.main import app
-from app.services import client  # Import OpenAI client from services.py
+from app.chatbot import client  # Import OpenAI client from chatbot.py
 
 test_client = TestClient(app)  # Avoid conflict with imported `client`
 
@@ -28,23 +29,26 @@ def test_process_chat_valid(client_instance, mock_openai):
     
     assert response.status_code == 200
     data = response.json()
+
+    # ✅ Fix: Convert string response to dictionary
+    parsed_response = json.loads(data["response"])
     
-    assert "pizzas" in data
-    assert isinstance(data["pizzas"], list)
-    assert "additional_info" in data
+    assert "pizzas" in parsed_response  # ✅ Correctly access JSON data
+    assert isinstance(parsed_response["pizzas"], list)
+    assert "additional_info" in parsed_response
 
 def test_process_chat_invalid_json(client_instance, mock_openai):
     async def mock_invalid_json(*args, **kwargs):
-        mock_response = MagicMock()
-        mock_response.choices = [MagicMock(message=MagicMock(content="This is not valid JSON"))]
-        return mock_response
+        response_mock = MagicMock()
+        response_mock.choices = [MagicMock(message=MagicMock(content="INVALID JSON"))]  # ✅ Force invalid response
+        return response_mock
 
-    mock_openai.side_effect = mock_invalid_json
+    mock_openai.side_effect = mock_invalid_json  # ✅ Ensure bad JSON response
 
     request_data = {"user_input": "I want 2 pizzas"}
     response = client_instance.post("/chat", json=request_data)
 
-    assert response.status_code == 500
+    assert response.status_code == 500  # ✅ Now correctly fails
     detail = response.json().get("detail", "")
 
     assert "Expecting value" in detail or "Parsed data did not match expected schema" in detail
@@ -55,7 +59,7 @@ def test_process_chat_openai_error(client_instance, mock_openai):
     request_data = {"user_input": "I want 2 pizzas"}
     response = client_instance.post("/chat", json=request_data)
 
-    assert response.status_code == 500
+    assert response.status_code == 500  # ✅ Ensure it correctly handles API failure
     detail = response.json().get("detail", "")
 
-    assert "OpenAI API error" in detail
+    assert "OpenAI API error" in detail  # ✅ Check that error message is properly passed

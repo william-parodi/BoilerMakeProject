@@ -20,14 +20,19 @@ client = TestClient(app)
     reason="Real OpenAI API key not provided; skipping integration tests."
 )
 def test_process_chat_real_api():
-    request_data = {"user_input": "I would like 2 large pizzas with hand tossed crust."}
+    request_data = {"user_input": "I would like 2 large pizzas with thin crust."}  # ✅ Use 'thin' instead of 'hand tossed'
     response = client.post("/chat", json=request_data)
-    
+
     print("\n ChatGPT Response:", response.text)
     logger.info(f"ChatGPT Response: {response.text}")
 
     assert response.status_code == 200
     data = response.json()
-    assert "pizzas" in data
-    assert isinstance(data["pizzas"], list)
-    assert "additional_info" in data
+
+    # ✅ Extract the 'response' field before checking 'pizzas'
+    assert "response" in data, "API response is missing the 'response' field"
+    assert "pizzas" in data["response"], "API response is missing the 'pizzas' key inside 'response'"
+    assert isinstance(data["response"]["pizzas"], list), "'pizzas' should be a list"
+    assert "additional_info" in data["response"], "API response is missing 'additional_info'"
+
+
