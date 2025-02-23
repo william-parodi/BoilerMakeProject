@@ -121,8 +121,8 @@ const orders = [
 ];
 
 // Function where all the automated processing is taking place
-// Processes individual order
-async function start_ordering() {
+// Processes all the individual orders
+async function start_ordering(orders) {
     for (const order of orders) {
         await process_order(order);
         await new Promise(resolve => setTimeout(resolve, WAIT_TIME / 4));

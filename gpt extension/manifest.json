@@ -20,6 +20,13 @@
       "type": "module"
     },
 
+    "web_accessible_resources": [
+      {
+        "resources": ["order_processing.html"],
+        "matches": ["*://*.dominos.com/*"]
+      }
+    ],
+
     "content_scripts": [
         {
           "matches": [

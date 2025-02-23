@@ -17,7 +17,7 @@ def mock_openai():
     with patch("app.services.openai.ChatCompletion.acreate", new_callable=AsyncMock) as mock_api:
         dummy_response = {
             "choices": [
-                {"message": {"content": '{"pizzas": [{"quantity": 2, "size": "medium", "crust": "thin"}], "additional_info": "Extra info processed."}' }}
+                {"message": {"content": '{"pizzas": [{"quantity": 2, "size": "medium", "crust": "hand tossed"}], "additional_info": "Extra info processed."}' }}
             ]
         }
         mock_api.return_value = dummy_response
